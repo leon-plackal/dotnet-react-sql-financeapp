@@ -183,3 +183,4 @@ dist
 *.user
 *.userosscache
 *.sln.docstates
+.fake

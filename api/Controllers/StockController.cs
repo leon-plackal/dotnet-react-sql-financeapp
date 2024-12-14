@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Dtos.Stock;
 using api.Mappers;
+using api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -16,7 +18,7 @@ namespace api.Controllers
         public StockController(ApplicationDBContext context)
         {
             _context = context;
-        }   
+        }
 
         [HttpGet]
         public IActionResult GetAll()
@@ -30,11 +32,54 @@ namespace api.Controllers
         public IActionResult GetById([FromRoute] int id)
         {
             var stock = _context.Stocks.Find(id);
-            if(stock == null)
+            if (stock == null)
             {
                 return NotFound();
             }
             return Ok(stock.ToDto());
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] CreateStockRequestDto stockDto)
+        {
+            var stockModel = stockDto.ToModelFromDto();
+            _context.Stocks.Add(stockModel);
+            _context.SaveChanges();
+            // get the ID of the newly created stock 
+            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockModel.ToDto());
+        }
+
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdateStockDto updateDto)
+        {
+            var stock = _context.Stocks.Find(id);
+            if (stock == null)
+            {
+                return NotFound();
+            }
+            stock.Symbol = updateDto.Symbol;
+            stock.CompanyName = updateDto.CompanyName;
+            stock.Purchase = updateDto.Purchase;
+            stock.LastDiv = updateDto.LastDiv;
+            stock.Industry = updateDto.Industry;
+            stock.MarketCap = updateDto.MarketCap;
+            _context.SaveChanges();
+            return Ok(stock.ToDto());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id)
+        {
+            var stock = _context.Stocks.Find(id);
+            if (stock == null)
+            {
+                return NotFound();
+            }
+            _context.Stocks.Remove(stock);
+            _context.SaveChanges();
+            return NoContent();
         }
     }
 }
